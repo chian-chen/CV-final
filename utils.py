@@ -16,7 +16,6 @@ def detect_lines(frame):
     edged = cv2.Canny(erosion, 50, 100)
     # edged = cv2.Canny(blurred, 50, 100)
 
-
     # Detect lines using the Hough Line Transform
     lines = cv2.HoughLinesP(edged, 1, np.pi / 180, threshold=50, minLineLength=100, maxLineGap=10)
 
@@ -137,5 +136,46 @@ def detection(video_path, significant_movement_threshold, grouping_threshold, mi
 
     if(len(opening_closing_frames) > 10):
         opening_closing_frames = detection(video_path, significant_movement_threshold * 1.1, grouping_threshold, min_event_length * 2)
+    
+    return opening_closing_frames
+
+
+def detection_fast(video_path, significant_movement_threshold, grouping_threshold, min_event_length):
+    cap = cv2.VideoCapture(video_path)
+    ret, frame = cap.read()
+    shape = frame.shape
+    lines = detect_lines(frame)
+    prev_pixel_set = line_pixel_set(lines, shape)
+
+    significant_movement_frames = []  # List to store frames where significant movement is detected
+    frame_count = 0  # Frame counter
+
+    while True:
+        ret, frame = cap.read()
+        frame_count += 1
+        
+        if not ret:
+            break
+
+        lines = detect_lines(frame)
+
+        current_pixel_set = line_pixel_set(lines, shape)
+        
+        jaccard_distance = np.sum(np.bitwise_xor(prev_pixel_set, current_pixel_set)) / np.sum(np.bitwise_or(prev_pixel_set, current_pixel_set))
+        
+        if jaccard_distance > significant_movement_threshold:
+            significant_movement_frames.append(frame_count)
+        
+        prev_pixel_set = current_pixel_set
+
+    cap.release()
+    events = event_filter(significant_movement_frames=significant_movement_frames, 
+                          grouping_threshold=grouping_threshold, 
+                          min_event_length=min_event_length)
+
+    opening_closing_frames = [("Opening", event[len(event) >> 2]) if i % 2 == 0 else ("Closing", event[len(event) >> 1]) for i, event in enumerate(events)]
+
+    if(len(opening_closing_frames) > 10):
+        opening_closing_frames = detection_fast(video_path, significant_movement_threshold * 1.1, grouping_threshold, min_event_length * 2)
     
     return opening_closing_frames
