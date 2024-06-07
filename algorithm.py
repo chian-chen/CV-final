@@ -43,6 +43,8 @@ def arg_parse():
     parser.add_argument('--significant_movement_threshold', default=0.6, type=float, help='Threshold for significant movement')
     parser.add_argument('--grouping_threshold', default=10, type=int, help='Number of frames to consider movements as part of the same event')
     parser.add_argument('--min_event_length', default=5, type=int, help='Minimum number of frames for a valid event')
+    parser.add_argument('--path', default='./tests', type=str, help='path to test videoes')
+    parser.add_argument('--output_file', type=str, default='algorithm_output.json', help='output json file name')
 
     args = parser.parse_args()
     return args
@@ -50,10 +52,8 @@ def arg_parse():
 
 if __name__ == "__main__":
 
-    directory = "./tests"  # Specify the directory to scan
-    output_filename = "algorithm_output.json"  # Output JSON file name
     args = arg_parse()
 
-    videos_info = scan_videos(directory, args)
-    generate_json(output_filename, videos_info)
-    print(f"Generated JSON file '{output_filename}' with video annotations.")
+    videos_info = scan_videos(args.path, args)
+    generate_json(args.output_file, videos_info)
+    print(f"Generated JSON file '{args.output_file}' with video annotations.")

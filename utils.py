@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import time
 
 def detect_lines(frame):
     # Convert the frame to grayscale
@@ -31,25 +32,6 @@ def line_pixel_set(lines, shape):
             for x1, y1, x2, y2 in line:
                 cv2.line(pixel_set, (x1, y1), (x2, y2), 255, 3)
     return pixel_set
-
-def evaluation(results):
-    GT = [[80, 100, 160, 197],
-        [50, 70, 250, 280],
-        [95, 115, 345, 375],
-        [75, 90, 160, 190],
-        [60, 75, 540, 565]]
-    
-    acc = 0
-    for i in range(5):
-        pred_open = results[i][0][1]
-        pred_close = results[i][1][1]
-
-        if GT[i][0] <= pred_open and GT[i][1] >= pred_open:
-            acc += 1
-        if GT[i][2] <= pred_close and GT[i][3] >= pred_close:
-            acc += 1
-
-    return acc * 10
 
 def event_filter(significant_movement_frames, grouping_threshold, min_event_length):
 
@@ -141,6 +123,7 @@ def detection(video_path, significant_movement_threshold, grouping_threshold, mi
 
 
 def detection_fast(video_path, significant_movement_threshold, grouping_threshold, min_event_length):
+
     cap = cv2.VideoCapture(video_path)
     ret, frame = cap.read()
     shape = frame.shape
@@ -151,6 +134,7 @@ def detection_fast(video_path, significant_movement_threshold, grouping_threshol
     frame_count = 0  # Frame counter
 
     while True:
+
         ret, frame = cap.read()
         frame_count += 1
         
@@ -178,4 +162,5 @@ def detection_fast(video_path, significant_movement_threshold, grouping_threshol
     if(len(opening_closing_frames) > 10):
         opening_closing_frames = detection_fast(video_path, significant_movement_threshold * 1.1, grouping_threshold, min_event_length * 2)
     
+
     return opening_closing_frames
